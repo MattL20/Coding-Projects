@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+        <style>
+            /*This is used to import the orbitron font for the game display*/
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+            /* This is used to style the black circle behind the game, also used to position it in the right 
+            place in the browser*/
+
+            .circle,#innercircle{
+                position: absolute;
+                align-items: center;
+                border-radius: 50%;
+                height: 400px;
+                width: 400px;
+                background-color: black;
+                margin-left: 500px;
+                margin-top: 175px;
+            }
+            /*These next four classes position and style the four corner circles that serve as the background for
+            the buttons*/
+            #outercircle1.circle{
+                height: 225px;
+                width: 225px;
+                background-color: rgb(34, 34, 34);
+                margin-left: 390px;
+                margin-top: 90px;
+                z-index: 1;
+            }
+
+            #outercircle2.circle{
+                height: 225px;
+                width: 225px;
+                background-color: rgb(34, 34, 34);
+                margin-left: 790px;
+                margin-top: 90px;
+                z-index: 1;
+            }
+
+            #outercircle3.circle{
+                height: 225px;
+                width: 225px;
+                background-color: rgb(34, 34, 34);
+                margin-left: 390px;
+                margin-top: 435px;
+                z-index: 1;
+            }
+
+            #outercircle4.circle{
+                height: 225px;
+                width: 225px;
+                background-color: rgb(34, 34, 34);
+                margin-left: 790px;
+                margin-top: 435px;
+                z-index: 1;
+            }
+            /*This sets up the button class with the main attributes for the four coloured buttons*/
+            .button{
+                position: absolute;
+                align-items: center;
+                border-radius: 50%;
+                height: 210px;
+                width: 210px;
+                margin-left: 7.5px;
+                margin-top: 7.5px;
+                z-index: 1;
+            }
+            /*These id tags just set the base colour for the buttons*/
+            #yellow.button{
+                background-color: rgb(233, 202, 27); 
+            }
+
+            #red.button{
+                background-color: darkred;
+            }
+
+            #blue.button{
+                background-color: blue; 
+            }
+
+            #green.button{
+                background-color: green;
+            }
+            /*This class sets up the main attributes for the centre display*/
+            .display{
+                position: absolute;
+                align-items: center;
+                text-align: center;
+                padding-top: 8px;
+                height: 30px;
+                margin-top: 185px;
+                border-radius: 10%;
+                background-color: grey;
+                z-index: 1;
+                font-family:'Orbitron';
+            }
+            /*These id tags set up each segement individually
+            for example the start button, the highscore segement and the last game segement*/
+            #start.display{
+                width: 80px;
+                margin-left: 160px;
+            }
+            /*This desicribes what ahppens when the start button is hovered over*/
+            #start:hover{
+                background-color: rgb(177, 175, 175);
+                cursor: pointer;
+            }
+            #last.display{
+                width: 40px;
+                margin-left: 243px;
+            }
+            #highscore.display{
+                width: 40px;
+                margin-left: 117px;
+            }
+
+            #light.circle{
+                height: 6px;
+                width: 6px;
+                background-color: red;
+                margin-left: 197px;
+                margin-top: 250px;
+            }
+           
+
+            
+        </style>
+    </head>
+    <body>
+        <!--These span and div tags are used to display the items on the screen and in the right place-->
+       <span class="circle" id="outercircle1"><span class="button" id="yellow"></span></span><span class="circle" id="outercircle2"><span class="button" id="red"></span></span>
+        <div class="circle" id="innercircle"><span class="display" id="highscore">00</span><span class="display" id="start">START</span><span class="display" id="last">00</span><span class="circle" id="light"></span></div>
+        <span class="circle" id="outercircle3"><span class="button" id="blue"></span></span><span class="circle" id="outercircle4"><span class="button" id="green"></span></span>
+    </body>
+    <script>
+        //First set up some variables
+        let order = [];
+        let player = [];
+        let light;
+        let pturn;
+        let correct;
+        let comturn;
+        let intervalID;
+        let timer = 0;
+        let playing = true;
+        let highscore = 0;
+        let alltimehighscore = 0;
+        let lastgamescore = 0;
+        //Next set up some constants that represent the id's in the html section
+        const lastgameCounter = document.querySelector("#last");
+        const highscorecount = document.querySelector("#highscore");
+        const yellowbutton = document.querySelector("#yellow");
+        const redbutton = document.querySelector("#red");
+        const bluebutton = document.querySelector("#blue");
+        const greenbutton = document.querySelector("#green");
+        const startbutton = document.querySelector("#start");
+        const led = document.querySelector("#light");
+//Add an event listener to the start button, so that when it is clicked it runs this function which calls the play() function
+// to start the ga,e
+        startbutton.addEventListener('click', (event) => {
+           
+           if(playing) {
+               play();
+               led.style.backgroundColor = "green";
+           }
+        });
+        //This play() function starts the game
+        function play() {
+            //It first resets the variables so that the game starts over properly
+            win = false;
+            order = [];
+            player = [];
+            light = 0;
+            intervalID = 0;
+            pturn = 1;
+            correct = true;
+            highscorecount.innerHTML = alltimehighscore;
+            //This loop fills the order array with random numbers between 1 and 4 which correspond to each of the coloured buttons
+            for(var i = 0; i<100; i++){
+                order.push(Math.floor(Math.random()*4)+1);
+            }
+            //comturn is then set to true to say that it is the computers turn
+            comturn = true;
+            //this interval calls the gameturn function every 800 milliseconds
+            intervalID = setInterval(gameTurn, 800);
+        }
+        //Gameturn controls what happens each turn of the game
+        function gameTurn(){
+            //firstly playing is set to false to stop the player being able to click the buttons while the game is flashing
+            playing = false;
+            //next the light variable is used to store the amount of lights that have lit up on the current round
+            //if the amount of lights reaches the current round number then the computers turn is over
+            if(light==pturn){
+                //the interval is cleared to stop the lights from flashing again
+                clearInterval(intervalID);
+                comturn = false;
+                // the buttons set back to their base colours
+                clearColour();
+                //playing set to true to show it is the players turn
+                playing = true;
+                
+            }
+            //this if statement just says if it is the computers turn run through the order array and flash the colours, for 200 milliseconds,
+            //corresponding to the numbers in the array
+            
+            if(comturn){
+                clearColour();
+                setTimeout(() =>
+                {
+                    if(order[light]==1){
+                       yellow(); 
+                    }
+                    if(order[light]==2){
+                       red(); 
+                    }
+                    if(order[light]==3){
+                       blue(); 
+                    }
+                    if(order[light]==4){
+                       green(); 
+                    }
+                    light++;
+                },200); 
+            }
+            //this if else statement just controls if the player does not repeat the sequence in 5 seconds call the lose game function
+            if(playing){
+            timer = setInterval(()=>{
+            loseGame();
+        },5000);
+        }else{
+            clearInterval(timer);
+        }
+            
+        }
+        //These colour functions just control how the flashes look for each colour and then reseting the colours back to normal
+        function yellow(){
+            yellowbutton.style.backgroundColor = "rgb(255, 237, 134)";
+        }
+        function red(){
+            redbutton.style.backgroundColor = "rgb(252, 97, 97)";
+        }
+        function blue(){
+            bluebutton.style.backgroundColor = "rgb(119, 156, 255)";
+        }
+        function green(){
+            greenbutton.style.backgroundColor = "rgb(0, 255, 0)";
+        }
+        function clearColour(){
+            yellowbutton.style.backgroundColor = "rgb(233, 202, 27)";
+            redbutton.style.backgroundColor = "darkred";
+            bluebutton.style.backgroundColor = "blue";
+            greenbutton.style.backgroundColor = "green";
+           
+        }
+        
+       //These next 4 event listeners are added to the coloured buttons each one does the same thing just for different buttons
+       //if the button is clicked
+       //first, if the player is playing i.e. playing = true push() the correseponding number into the player order array
+       //then call the checkcorrect() function
+       //flash the buttons colour for 300 milliseconds
+        yellowbutton.addEventListener('click', (event) =>{
+            if(playing){
+                player.push(1);
+                checkcorrect();
+                yellow();
+                setTimeout(() => {
+                    clearColour();
+                }, 300);
+            }
+        });
+        redbutton.addEventListener('click', (event) =>{
+            if(playing){
+                player.push(2);
+                checkcorrect();
+                red();
+                setTimeout(() => {
+                    clearColour();
+                }, 300);
+                }
+            
+        });
+        bluebutton.addEventListener('click', (event) =>{
+            if(playing){
+                player.push(3);
+                checkcorrect();
+                blue();
+                setTimeout(() => {
+                    clearColour();
+                }, 300);
+                }
+            
+        });
+        greenbutton.addEventListener('click', (event) =>{
+            if(playing){
+                player.push(4);
+                checkcorrect();
+                green();
+                setTimeout(() => {
+                    clearColour();
+                }, 300);
+                }
+        });
+        //This check correct function is just used to check if the player has gotten the order right
+        function checkcorrect() {
+            //if then last button clicked does not match the sequence correct = false
+            // and call the losegame function
+            if(player[player.length-1]!== order[player.length-1]){
+                correct = false;
+                loseGame();
+            }
+            
+           //If we have reached the end of the current turn and the player got everything right
+            if(pturn == player.length && correct){
+                //highscore is set to the current turn
+               highscore = pturn;
+               //the turn is increased
+               pturn++;
+               //if the current highscore is greater then the alltimehighscore set alltimehighscore = highscore
+               if(highscore>alltimehighscore){
+                   alltimehighscore = highscore;
+               }
+               //reset the player order
+               player = []; 
+               //update the highscore counter
+               highscorecount.innerHTML = alltimehighscore;
+               //stop the 5 second timer
+               clearInterval(timer);
+               //it is now the computers turn again
+               comturn = true;
+               light = 0;
+               //These else if statement just increase the speed of the game after the 5th, 9th and 13th turn
+               if(pturn<5){
+               intervalID = setInterval(gameTurn, 800);
+               }
+               else if(pturn>=5 && pturn<9){
+                intervalID = setInterval(gameTurn, 600);
+               }
+               else if(pturn>=9 && pturn<13){
+                intervalID = setInterval(gameTurn, 400);
+               }
+               else if(pturn>=13){
+                intervalID = setInterval(gameTurn, 300);
+               }
+            }
+        }
+        //This loseGame() function controls what happens when the game is lost
+        function loseGame(){
+            //the last game score is set to the current highscore and the display is updated
+            lastgamescore = highscore;
+            lastgameCounter.innerHTML = lastgamescore;
+            // the 5 second timer is stopped
+            clearInterval(timer);
+            //playing is set to false so the player cannot click any of the buttons
+            playing = false;
+            let intervalID2 = 0;
+            //This interval and timeout is set up to flash the coloured buttons 5 times and then stop
+            intervalID2 = setInterval(flashColours, 1000);
+                setTimeout(()=>{
+                clearInterval(intervalID2); 
+            },5000);
+            //then after a pause the game is reset
+            setTimeout(()=>{
+                reset();
+            },6000);
+                 
+        }
+        //This function flashes all four buttons at once for 300 milliseconds
+        function flashColours() { 
+            clearColour();
+            setTimeout(()=>{ 
+                yellow();
+                red();
+                blue();
+                green(); 
+            },300)
+    }
+    //This reset function is just used to reset all the variables back to how they should be at the start of the game
+    function reset(){
+        
+            order = [];
+            player = [];
+            light = 0;
+            intervalID = 0;
+            pturn = 1;
+            correct = true;
+            highscore =0;
+            clearColour();
+            //The alltimehighscore is kept and not altered when reset
+            highscorecount.innerHTML = alltimehighscore;
+            led.style.backgroundColor = "red";
+            playing = true;
+    }
+
+        
+    </script>
+</html>
